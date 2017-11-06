@@ -54,9 +54,6 @@ static const char*       OUTPUT                     = "argus_gstvideoencode_out.
 static const uint32_t    LENGTH                     = 10; // in seconds.
 
 
-Queue<int   > NewOCVConsumer02NewOCVConsumer1MsgQ;
-Queue<int   > NewOCVConsumer12NewOCVConsumer0MsgQ;
-
 // Globals.
 EGLDisplayHolder g_display;
 
