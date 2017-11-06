@@ -175,8 +175,8 @@ aaDebug::aaDebug()
 			NULL);
 
 
-  /* configure appsrc */
-  gst_app_src_set_caps(GST_APP_SRC(m_pappsrc), m_pcaps);
+    /* configure appsrc */
+    gst_app_src_set_caps(GST_APP_SRC(m_pappsrc), m_pcaps);
     g_signal_connect(m_pappsrc, "need-data", G_CALLBACK(start_feed), this);
     g_signal_connect(m_pappsrc, "enough-data", G_CALLBACK(stop_feed), this);
 
@@ -187,24 +187,11 @@ aaDebug::aaDebug()
 
     gst_bin_add_many(GST_BIN(m_ppipeline), (GstElement*)m_pappsrc, m_pvideoConvert, m_pencoder, m_pmux, m_pfsink, NULL);
 
-#if 1
     if(!gst_element_link_many((GstElement*)m_pappsrc, m_pvideoConvert, m_pencoder, m_pmux, m_pfsink,NULL)){
        g_warning("failed to link appsrc, autovideoconvert, encoder, muxer, and filesink");
        gst_object_unref (m_ppipeline);
        return ;
     }
-#else
-    if(!gst_element_link((GstElement*)m_pappsrc, m_pvideoConvert)){
-       g_warning("failed to link appsrc, autovideoconvert");
-    }
-    if(!gst_element_link(m_pencoder, m_pmux)){
-       g_warning("failed to link encoder and mux");
-    }
-    if(!gst_element_link(m_pmux,m_pfsink)){
-       g_warning("failed to link mux and sink");
-    }
-
-#endif
 
   /* go to the PAUSED state and wait for preroll */
   //g_message ("prerolling first frame");
