@@ -1,10 +1,10 @@
 #include "aaDebug.h"
 
 
-int feedFlag = 0;
-static int fno=0;
-int imageWidth = 2048;
-int imageHeight = 1080;
+int feedFlag            = 0;
+static int fno          = 0;
+int imageWidth          = 2048;
+int imageHeight         = 1080;
 
 static void
 event_loop (GstElement * pipe)
@@ -76,55 +76,16 @@ event_loop (GstElement * pipe)
   gst_object_unref (bus);
 }
 
-#if 0
-static gboolean read_data(void *ptr)
-{
- GstBuffer *m_pgstBuffer;
- GstVideoMeta *m_pgstVideoMeta;
- cv::Mat img = ocvConsumer2EncoderQ.pop();
-  gsize           m_offset[3];
-  gint           m_stride[3];
-    m_offset[0] = m_offset[1] = m_offset[2] = 0;
-    m_stride[0] = 2048; // TBD : FIXME : no magic no
-    m_stride[1] = 1024; 
-    m_stride[2] = 1024;
-
-    int size              = 1920*1080*1.5;
-    m_pgstBuffer          = gst_buffer_new_wrapped_full( (GstMemoryFlags)0, (gpointer)(img.data), size, 0, size, NULL, NULL );
-    m_pgstVideoMeta       = gst_buffer_add_video_meta_full(m_pgstBuffer,GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_FORMAT_I420, 1920,1080, 3, m_offset, m_stride );
-
-    //ref buffer to give copy to appsrc
-    gst_buffer_ref(m_pgstBuffer);
-
-cout << "push buffer\n";
-
-    GstFlowReturn ret;
-    ret                  = gst_app_src_push_buffer(((aaDebug *)ptr)->m_pappsrc, m_pgstBuffer);
-    if(ret != GST_FLOW_OK)
-    {
-        g_printerr("could not push buffer\n");
-        g_printerr("ret enum: %i\n", ret);
-    }
-
-    //dec. ref count so that we can edit data on next run
-    gst_buffer_unref(m_pgstBuffer);
-
-
- return TRUE;
-}
-#endif
-
 static void start_feed (GstElement * pipeline, guint size, void *ptr)
 {
-cout << "1 Start feeding\n";
  if (feedFlag == 0) {
 
-feedFlag = 1;
+    feedFlag = 1;
 
- GstBuffer *m_pgstBuffer;
- GstVideoMeta *m_pgstVideoMeta;
+    GstBuffer *m_pgstBuffer;
+    GstVideoMeta *m_pgstVideoMeta;
 // cv::Mat img = ((aaDebug *)ptr)->ocvConsumer2EncoderQ.pop();
- cv::Mat img = ((aaDebug *)ptr)->ocvConsumer2EncoderQ.pop();
+    cv::Mat img = ((aaDebug *)ptr)->ocvConsumer2EncoderQ.pop();
 // frameBuffer framedata = ((aaDebug *)ptr)->ocvConsumer2EncoderFrameBuffer.pop();
 //cv::imshow("img",img);
 //cv::waitKey(1);	
@@ -148,24 +109,9 @@ feedFlag = 1;
     GST_BUFFER_DTS(m_pgstBuffer) = 0;
     GST_BUFFER_PTS(m_pgstBuffer) = 0;
 
-#if 0
-{
-char filename[250];
-sprintf(filename,"junk/frame%04d.jpg",fno++);
-FILE *fp = fopen(filename,"wb");
-if (NULL == fp){
-fprintf(stderr,"Unable to open file %s\n",filename);
-exit(1);
-}
-fwrite(framedata.dataY,sizeof(char),size,fp);
-fclose(fp);
-}
-#endif
-
     GstFlowReturn ret;
     g_signal_emit_by_name (((aaDebug *)ptr)->m_pappsrc, "push-buffer", m_pgstBuffer, &ret);
 
-//    ret                  = gst_app_src_push_buffer(((aaDebug *)ptr)->m_pappsrc, m_pgstBuffer);
     if(ret != GST_FLOW_OK)
     {
         g_printerr("could not push buffer\n");
@@ -176,18 +122,7 @@ fclose(fp);
     gst_buffer_unref(m_pgstBuffer);
 
 
-/*if (ocvConsumer2EncoderFrameBuffer.getsize() > 1){
-   frameBuffer fd = ocvConsumer2EncoderFrameBuffer.back();
-       munmap(fd.dataY, 2048*1080);
-       munmap(fd.dataU, 1024*540);
-       munmap(fd.dataV, 1024*540);
-}*/
-
-
-cout << "2 Start feeding\n";
-
-
-feedFlag = 0;
+    feedFlag = 0;
  }
 }
 
@@ -203,66 +138,7 @@ cout << "Stop feeding\n";
  
 
 
-#if 0
-aaDebug::aaDebug()
-{
-// this is working
-//   m_videoWriter.open("appsrc ! autovideoconvert ! omxh265enc ! matroskamux ! filesink location=test.mkv ", 0, (double)30, cv::Size(1920, 1080), true);
 
-//GstCaps *caps1, *caps2;
-//caps1 =
-//gst_video_format_new_caps (GST_VIDEO_FORMAT_xRGB, 640, 480, 25, 1, 1, 1);
-
-    GstVideoInfo info;
-    GstCaps *caps;
-
-    string aaDebugPipeline          = "appsrc name=myappsrc ! autovideoconvert ! omxh265enc ! matroskamux ! filesink location=test.mkv ";    
-    m_ppipeline                        = gst_parse_launch(aaDebugPipeline.c_str(),NULL);
-    g_assert (m_ppipeline);
-
-    m_pappsrc                          = gst_bin_get_by_name (GST_BIN(m_ppipeline), "myappsrc");
-    g_assert (m_pappsrc);
-
-    m_offset[0] = m_offset[1] = m_offset[2] = 0;
-    m_stride[0] = 2048; // TBD : FIXME : no magic no
-    m_stride[1] = 1024; 
-    m_stride[2] = 1024;
-
-#if 0
-    gst_video_info_set_format(&info, GST_VIDEO_FORMAT_I420, 1920, 1080);
-    caps                            = gst_video_info_to_caps(&info); 
-
-	caps = gst_caps_new_simple ("video/x-raw",
-			"format",G_TYPE_STRING,"I420",
-//			"bpp",G_TYPE_INT,12,
-//			"depth",G_TYPE_INT,8,
-			"width", G_TYPE_INT, 1920,
-			"height", G_TYPE_INT, 1080,
-			"pitch", G_TYPE_INT, 2048,
-			"framerate", GST_TYPE_FRACTION, 30, 1,
-			NULL);
-
-
-
-    gst_app_src_set_caps(GST_APP_SRC(appsrc), caps);
-#endif
-   //m_pgstBuffer        = gst_buffer_new();
-//   m_pgstVideoMeta     = gst_buffer_add_video_meta_full(outbuf,GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_FORMAT_RGB,1920,1080, 3, ostrm->offset, ostrm->stride );
- //  m_pgstVideoMeta     = gst_buffer_add_video_meta_full(m_pgstBuffer,GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_FORMAT_I420, 1920,1080, 3, m_offset, m_stride );
-     GstStateChangeReturn state_ret = gst_element_set_state((GstElement*)m_ppipeline, GST_STATE_PLAYING);
-     g_warning("set state returned %d\n", state_ret);  
-
-#if 1
-   m_videoWriter.open(aaDebugPipeline,0, (double)30, cv::Size(1920, 1080), false);
-//   m_videoWriter.open("appsrc ! nvvidconv ! 'video/x-raw, format=(string)I420, framerate=(fraction)30/1'  ! omxh265enc ! matroskamux ! filesink location=test.mkv ", 0, (double)30, cv::Size(1920, 1080), false);
-   if (!m_videoWriter.isOpened()) {
-      REPORT_ERROR("can't create writer\n");
-      exit(1);
-   }
-#endif
-}
-
-#else
 aaDebug::aaDebug()
 {
     GstStateChangeReturn state_ret;
@@ -274,7 +150,6 @@ aaDebug::aaDebug()
     m_stride[1] = 1024; 
     m_stride[2] = 1024;
 
-//    m_ppipeline            = (GstPipeline*)gst_pipeline_new("mypipeline");
     m_ppipeline            = gst_pipeline_new("mypipeline");
     m_pappsrc              = (GstAppSrc*)gst_element_factory_make("appsrc", "aa-appsrc");
     m_pvideoConvert        = gst_element_factory_make("autovideoconvert", "aa-videoconvert");
@@ -341,11 +216,7 @@ aaDebug::aaDebug()
   // event_loop (m_ppipeline);
   g_message ("finished constructing pipeline");
 
-//    state_ret = gst_element_set_state((GstElement*)m_ppipeline, GST_STATE_PLAYING);
-//    g_warning("set state returned %d\n", state_ret);
-
 }
-#endif
 
 
 aaDebug::~aaDebug()
@@ -358,27 +229,4 @@ state_ret = gst_element_set_state((GstElement*)m_ppipeline, GST_STATE_NULL);
     gst_object_unref(GST_OBJECT(m_ppipeline));
 }
 
-void aaDebug::pushFrame(cv::Mat & img)
-{
-cout << "Pushing frame \n";
-    int size              = 1920*1080*1.5;
-    m_pgstBuffer          = gst_buffer_new_wrapped_full( (GstMemoryFlags)0, (gpointer)(img.data), size, 0, size, NULL, NULL );
-    m_pgstVideoMeta       = gst_buffer_add_video_meta_full(m_pgstBuffer,GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_FORMAT_I420, 1920,1080, 3, m_offset, m_stride );
-
-    //ref buffer to give copy to appsrc
-    gst_buffer_ref(m_pgstBuffer);
-
-
-    GstFlowReturn ret;
-    ret                  = gst_app_src_push_buffer((GstAppSrc*)m_pappsrc, m_pgstBuffer);
-    if(ret != GST_FLOW_OK)
-    {
-        g_printerr("could not push buffer\n");
-        g_printerr("ret enum: %i\n", ret);
-    }
-
-    //dec. ref count so that we can edit data on next run
-    gst_buffer_unref(m_pgstBuffer);
-
-}
 
