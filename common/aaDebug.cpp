@@ -90,6 +90,17 @@ static void start_feed (GstElement * pipeline, guint size, void *ptr)
 //cv::imshow("img",img);
 //cv::waitKey(1);	
 
+    FILE *fp ;
+    char fname[256];
+    sprintf(fname,"yuvframes/frame-%04d",fno++);
+    if ( (fp = fopen(fname,"wb")) == NULL ){
+       g_printerr("Unable to open file\n");
+       exit(1);
+    }
+    fwrite(img.data,sizeof(char),2048*1080+1024*540, fp);
+    fclose(fp);
+
+
   gsize           m_offset[3];
   gint           m_stride[3];
     m_offset[0] = 0;
