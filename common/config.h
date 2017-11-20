@@ -17,7 +17,7 @@
 
 
 #include <opencv2/core/core.hpp>
-
+#include "nvbuf_utils.h"
 
 using namespace std;
 using namespace cv;
@@ -46,6 +46,9 @@ struct frameBuffer
 	char *dataY;
 	char *dataU;
 	char *dataV;
+
+    NvBufferParams nvBuffParams;
+
 };
 
 

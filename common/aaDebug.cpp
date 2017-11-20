@@ -84,12 +84,11 @@ static void start_feed (GstElement * pipeline, guint size, void *ptr)
 
     GstBuffer *m_pgstBuffer;
     GstVideoMeta *m_pgstVideoMeta;
-// cv::Mat img = ((aaDebug *)ptr)->ocvConsumer2EncoderQ.pop();
-    cv::Mat img = ((aaDebug *)ptr)->ocvConsumer2EncoderQ.pop();
-// frameBuffer framedata = ((aaDebug *)ptr)->ocvConsumer2EncoderFrameBuffer.pop();
-//cv::imshow("img",img);
-//cv::waitKey(1);	
+//  cv::Mat img = ((aaDebug *)ptr)->ocvConsumer2EncoderQ.pop();
+//  cv::Mat img = ((aaDebug *)ptr)->ocvConsumer2EncoderQ.pop();
+    frameBuffer framedata = ((aaDebug *)ptr)->ocvConsumer2EncoderFrameBuffer.pop();
 
+#if 0
     FILE *fp ;
     char fname[256];
     sprintf(fname,"yuvframes/frame-%04d",fno++);
@@ -97,21 +96,22 @@ static void start_feed (GstElement * pipeline, guint size, void *ptr)
        g_printerr("Unable to open file\n");
        exit(1);
     }
-    fwrite(img.data,sizeof(char),2048*1080+1024*540, fp);
+    fwrite(img.data,sizeof(char),2048*1080+1024*540+1024*540, fp);
     fclose(fp);
+#endif
+
+    gsize          m_offset[3];
+    gint           m_stride[3];
+    m_offset[0]    = framedata.nvBuffParams.offset[0];
+    m_offset[1]    = framedata.nvBuffParams.offset[1];
+    m_offset[2]    = framedata.nvBuffParams.offset[2];
+    m_stride[0]    = framedata.nvBuffParams.pitch[0]; 
+    m_stride[1]    = framedata.nvBuffParams.pitch[1]; 
+    m_stride[2]    = framedata.nvBuffParams.pitch[2];
 
 
-  gsize           m_offset[3];
-  gint           m_stride[3];
-    m_offset[0] = 0;
-    m_offset[1] = 2048*1080;
-    m_offset[2] = 2048*1080+1024*540;
-    m_stride[0] = 2048; // TBD : FIXME : no magic no
-    m_stride[1] = 1024; 
-    m_stride[2] = 1024;
-
-    int size              = 2048*1080*1.5;
-    m_pgstBuffer          = gst_buffer_new_wrapped_full( (GstMemoryFlags)0, (gpointer)(img.data), size, 0, size, NULL, NULL );
+    int size              = imageWidth * imageHeight * 1.5;
+    m_pgstBuffer          = gst_buffer_new_wrapped_full( (GstMemoryFlags)0, (gpointer)(framedata.dataY), size, 0, size, NULL, NULL );
     m_pgstVideoMeta       = gst_buffer_add_video_meta_full(m_pgstBuffer,GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_FORMAT_I420, imageWidth,imageHeight, 3, m_offset, m_stride );
 
     //ref buffer to give copy to appsrc

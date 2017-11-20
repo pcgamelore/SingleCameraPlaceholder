@@ -132,33 +132,34 @@ bool aaCamCaptureThread::threadExecute()
         NvBufferGetParams(fd, &params);
 
         int fsize = params.pitch[0] * params.height[0] ;
-	int fsizeU = params.pitch[1] * params.height[1] ;
-	int fsizeV = params.pitch[2] * params.height[2];
+	    int fsizeU = params.pitch[1] * params.height[1] ;
+	    int fsizeV = params.pitch[2] * params.height[2];
    
- 	struct timeval tp;
+ 	    struct timeval tp;
     	gettimeofday(&tp, NULL);
     	long start = tp.tv_sec * 1000 + tp.tv_usec / 1000;
 
-        char *m_datamem  = (char *)mmap(NULL, fsize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, params.offset[0]);
-	char *m_datamemU = (char *)mmap(NULL, fsizeU, PROT_READ | PROT_WRITE, MAP_SHARED, fd, params.offset[1]);
-	char *m_datamemV = (char *)mmap(NULL, fsizeV, PROT_READ | PROT_WRITE, MAP_SHARED, fd, params.offset[2]);
-        
+        char *m_datamem  = (char *)mmap(NULL, fsize+fsizeU+fsizeV, PROT_READ | PROT_WRITE, MAP_SHARED, fd, params.offset[0]);
+	    char *m_datamemU = (char *)mmap(NULL, fsizeU, PROT_READ | PROT_WRITE, MAP_SHARED, fd, params.offset[1]);
+	    char *m_datamemV = (char *)mmap(NULL, fsizeV, PROT_READ | PROT_WRITE, MAP_SHARED, fd, params.offset[2]);
+
 
         if( (m_datamem == MAP_FAILED) || (m_datamemU == MAP_FAILED) || (m_datamemV == MAP_FAILED) )
            ORIGINATE_ERROR("mmap failed : %s\n", strerror(errno));
 	
-	frameBuffer framedata;
+	    frameBuffer framedata;
 	
-	framedata.dataY = m_datamem;
-	framedata.dataU = m_datamemU;
-	framedata.dataV = m_datamemV;
+	    framedata.dataY = m_datamem;
+	    framedata.dataU = m_datamemU;
+	    framedata.dataV = m_datamemV;
+        framedata.nvBuffParams = params;
 
         // Push input buffer into q for OCV Consumer 
         m_pinputFrameQ->push(framedata);
-	m_pinputFrameFdQ->push(fd);
+	    m_pinputFrameFdQ->push(fd);
 
         AACAM_CAPTURE_PRINT("Pushed frame no %d  Queue Size: %d Camera ID : %d\n",m_currentFrame,m_pinputFrameQ->getsize() ,m_pCamInfo->camId);
-	m_currentFrame++;
+	    m_currentFrame++;
     }
 
 

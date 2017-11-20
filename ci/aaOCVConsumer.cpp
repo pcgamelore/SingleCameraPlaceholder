@@ -99,7 +99,8 @@ bool aaNewOCVConsumerThread::threadExecute()
             
 
             // push buffers in encoder Q. These will be popped by appsrc element in aaDebug.cpp
-            m_pDebugObj->ocvConsumer2EncoderQ.push(imgY);
+//            m_pDebugObj->ocvConsumer2EncoderQ.push(imgY);
+            m_pDebugObj->ocvConsumer2EncoderFrameBuffer.push(framedata);
 
             // temporarily disable unmap to debug encoding of imgY 
 //          munmap(framedata.dataY, PITCH_SIZE_X*FRAME_SIZE_Y);

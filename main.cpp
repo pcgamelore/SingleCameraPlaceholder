@@ -35,7 +35,7 @@ using namespace Argus;
 using namespace ArgusSamples;
 
 
-static uint32_t CAPTURE_TIME                        = 15; // In seconds.
+static uint32_t CAPTURE_TIME                        = 3; // In seconds.
 static const uint32_t NUMBER_SESSIONS               = 2;
 static const int    DEFAULT_FPS                     = 30;
 static const int lastFrameCount                     = CAPTURE_TIME * DEFAULT_FPS;
