@@ -42,7 +42,7 @@ public:
     ~aaCamCaptureThread()
     {
     }
-    void init_members(OutputStream *stream, Argus::Size size, NvEglRenderer *renderer);
+    void init_members(OutputStream *stream, ARGUSSIZE size, NvEglRenderer *renderer);
     int getCamCapture2NewOCVConsumerMsgQSize();
 
     //aaCamera   *m_pCamera;
@@ -59,7 +59,7 @@ private:
 
     OutputStream               *m_stream;
     UniqueObj<FrameConsumer>    m_consumer;
-    Argus::Size                 m_framesize;
+    ARGUSSIZE                   m_framesize;
     NvEglRenderer              *m_renderer;
     int m_id;
 

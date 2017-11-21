@@ -65,7 +65,7 @@ namespace ArgusSamples
 
 
 
-void aaCamCaptureThread::init_members(OutputStream *stream, Argus::Size size, NvEglRenderer *renderer)
+void aaCamCaptureThread::init_members(OutputStream *stream, ARGUSSIZE size, NvEglRenderer *renderer)
 {
     m_stream    = stream;
     m_framesize = size;

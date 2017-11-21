@@ -44,8 +44,8 @@ static const int lastFrameCount                     = CAPTURE_TIME * DEFAULT_FPS
 namespace ArgusSamples
 {
 // Constants.
-static const Argus::Size PREVIEW_STREAM_SIZE(640, 480);
-static const Argus::Size OCV_STREAM_SIZE(1920, 1080);
+static const ARGUSSIZE   PREVIEW_STREAM_SIZE(640, 480);
+static const ARGUSSIZE   OCV_STREAM_SIZE(1920, 1080);
 static const int32_t     FRAMERATE                  = DEFAULT_FPS;
 static const int32_t     BITRATE                    = 20000000;
 static const char*       ENCODER                    = "omxh264enc";
@@ -86,7 +86,7 @@ public:
      *                    qtmux (MP4), 3gppmux (3GP), avimux (AVI), identity (H265)
      * @param[in] output The filename/path for the encoded output.
      */
-    bool initialize(EGLStreamKHR eglStream, Argus::Size resolution,
+    bool initialize(EGLStreamKHR eglStream, ARGUSSIZE resolution,
                     int32_t framerate, int32_t bitrate,
                     const char* encoder, const char* muxer, const char* output)
     {
@@ -155,8 +155,8 @@ public:
         // Create caps filter to describe EGLStream image format.
         GstCaps *caps = gst_caps_new_simple("video/x-raw",
                                             "format", G_TYPE_STRING, "I420",
-                                            "width", G_TYPE_INT, resolution.width,
-                                            "height", G_TYPE_INT, resolution.height,
+                                            "width", G_TYPE_INT, resolution.width(),
+                                            "height", G_TYPE_INT, resolution.height(),
                                             "framerate", GST_TYPE_FRACTION, framerate, 1,
                                             NULL);
         if (!caps)
@@ -336,11 +336,7 @@ bool  execute()
 #if  ENABLERECORD
     iStreamSettingsCamera0->setEGLDisplay(g_display.get());
 #endif
-#if ENABLETX1
-    iStreamSettingsCamera0->setResolution(Argus::Size(FRAME_SIZE_X,FRAME_SIZE_Y));
-#else
-    iStreamSettingsCamera0->setResolution(Argus::Size2D<uint32_t>(FRAME_SIZE_X,FRAME_SIZE_Y ));
-#endif
+    iStreamSettingsCamera0->setResolution(ARGUSSIZE(FRAME_SIZE_X,FRAME_SIZE_Y));
 
 
 
@@ -401,7 +397,7 @@ bool  execute()
  // Initialize the GStreamer video encoder consumer.
     GstVideoEncoder gstVideoEncoder;
     string outputFile0 = "imx0.mp4";
-    if (!gstVideoEncoder.initialize(iVideoStreamCamera0->getEGLStream(), Argus::Size(FRAME_SIZE_X,FRAME_SIZE_Y) , FRAMERATE, BITRATE, ENCODER, MUXER, outputFile0.c_str()))
+    if (!gstVideoEncoder.initialize(iVideoStreamCamera0->getEGLStream(), ARGUSSIZE(FRAME_SIZE_X,FRAME_SIZE_Y) , FRAMERATE, BITRATE, ENCODER, MUXER, outputFile0.c_str()))
 	ORIGINATE_ERROR("Failed to initialize GstVideoEncoder EGLStream consumer");
 
     if (!gstVideoEncoder.startRecording())

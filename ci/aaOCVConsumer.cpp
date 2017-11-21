@@ -59,7 +59,7 @@ namespace ArgusSamples
 
 
 
-void aaNewOCVConsumerThread::init_members(OutputStream *stream, Argus::Size size, NvEglRenderer *renderer)
+void aaNewOCVConsumerThread::init_members(OutputStream *stream, ARGUSSIZE size, NvEglRenderer *renderer)
 {
     m_renderer  = renderer;
 }

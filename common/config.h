@@ -17,7 +17,15 @@
 
 
 #include <opencv2/core/core.hpp>
+#include "EGLGlobal.h"
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include "NvUtils.h"
+#include "NvCudaProc.h"
 #include "nvbuf_utils.h"
+#include "NvBuffer.h"
+#include "NvAnalysis.h"
+#include "cudaEGL.h"
 
 using namespace std;
 using namespace cv;
@@ -28,9 +36,6 @@ using namespace cv;
 #define PRINT(...);   
 #endif
 
-#define ENABLETX1 1
-#define ENABLERECORD 0
-#define ENABLECUDA 0
 
 #define USEPOSITIONONLY 1
 
@@ -50,6 +55,12 @@ struct frameBuffer
     NvBufferParams nvBuffParams;
 
 };
+
+#ifdef ENABLETX2
+#define ARGUSSIZE Argus::Size2D<uint32_t>
+#elif ENABLETX1
+#define ARGUSSIZE Argus::Size2D
+#endif
 
 
 

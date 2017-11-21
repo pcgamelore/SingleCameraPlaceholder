@@ -5,6 +5,7 @@ int feedFlag            = 0;
 static int fno          = 0;
 int imageWidth          = 2048;
 int imageHeight         = 1080;
+GstClockTime timestamp  = 0;
 
 static void
 event_loop (GstElement * pipe)
@@ -117,8 +118,8 @@ static void start_feed (GstElement * pipeline, guint size, void *ptr)
     //ref buffer to give copy to appsrc
     gst_buffer_ref(m_pgstBuffer);
 
-    GST_BUFFER_DTS(m_pgstBuffer) = 0;
-    GST_BUFFER_PTS(m_pgstBuffer) = 0;
+    //GST_BUFFER_DTS(m_pgstBuffer) = 0;
+    GST_BUFFER_PTS(m_pgstBuffer) = timestamp;
 
     GstFlowReturn ret;
     g_signal_emit_by_name (((aaDebug *)ptr)->m_pappsrc, "push-buffer", m_pgstBuffer, &ret);
@@ -131,9 +132,8 @@ static void start_feed (GstElement * pipeline, guint size, void *ptr)
 
     //dec. ref count so that we can edit data on next run
     gst_buffer_unref(m_pgstBuffer);
-
-
     feedFlag = 0;
+    timestamp += 33333;
  }
 }
 
@@ -163,7 +163,6 @@ aaDebug::aaDebug()
 
     m_ppipeline            = gst_pipeline_new("mypipeline");
     m_pappsrc              = (GstAppSrc*)gst_element_factory_make("appsrc", "aa-appsrc");
-    m_pvideoConvert        = gst_element_factory_make("autovideoconvert", "aa-videoconvert");
     m_pencoder             = gst_element_factory_make("omxh265enc", "aa-videoencoder");
     m_pmux                 = gst_element_factory_make("matroskamux", "aa-mux");
     m_pfsink               = gst_element_factory_make("filesink", "aa-filesink");
@@ -171,7 +170,6 @@ aaDebug::aaDebug()
 
     g_assert(m_ppipeline);
     g_assert(m_pappsrc);
-    g_assert(m_pvideoConvert);
     g_assert(m_pencoder);
     g_assert(m_pmux);
     g_assert(m_pfsink);
@@ -191,14 +189,12 @@ aaDebug::aaDebug()
     g_signal_connect(m_pappsrc, "need-data", G_CALLBACK(start_feed), this);
     g_signal_connect(m_pappsrc, "enough-data", G_CALLBACK(stop_feed), this);
 
-    g_object_set(m_pappsrc,"format" , GST_FORMAT_TIME,NULL);
-    g_object_set( G_OBJECT( m_pfsink ), "location", "test2.mp4", NULL ); 
-
+    g_object_set(m_pappsrc,"format" ,      GST_FORMAT_TIME,NULL);
+    g_object_set( G_OBJECT( m_pfsink ),   "location", "test2.mp4", NULL ); 
     g_object_set( G_OBJECT( m_pencoder ), "bitrate", 40000000, NULL ); 
+    gst_bin_add_many(GST_BIN(m_ppipeline), (GstElement*)m_pappsrc, m_pencoder, m_pmux, m_pfsink, NULL);
 
-    gst_bin_add_many(GST_BIN(m_ppipeline), (GstElement*)m_pappsrc, m_pvideoConvert, m_pencoder, m_pmux, m_pfsink, NULL);
-
-    if(!gst_element_link_many((GstElement*)m_pappsrc, m_pvideoConvert, m_pencoder, m_pmux, m_pfsink,NULL)){
+    if(!gst_element_link_many((GstElement*)m_pappsrc, m_pencoder, m_pmux, m_pfsink,NULL)){
        g_warning("failed to link appsrc, autovideoconvert, encoder, muxer, and filesink");
        gst_object_unref (m_ppipeline);
        return ;
