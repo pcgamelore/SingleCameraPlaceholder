@@ -51,6 +51,10 @@ struct frameBuffer
 	char *dataY;
 	char *dataU;
 	char *dataV;
+       
+        void **ydata;
+        void **udata;
+        void **vdata;
 
     NvBufferParams nvBuffParams;
 
@@ -62,6 +66,7 @@ struct frameBuffer
 #define ARGUSSIZE Argus::Size2D
 #endif
 
+//#define R281_MEMMAP 1
 
 
 #endif

@@ -103,6 +103,8 @@ static void start_feed (GstElement * pipeline, guint size, void *ptr)
 
     gsize          m_offset[3];
     gint           m_stride[3];
+
+
     m_offset[0]    = framedata.nvBuffParams.offset[0];
     m_offset[1]    = framedata.nvBuffParams.offset[1];
     m_offset[2]    = framedata.nvBuffParams.offset[2];
@@ -110,14 +112,27 @@ static void start_feed (GstElement * pipeline, guint size, void *ptr)
     m_stride[1]    = framedata.nvBuffParams.pitch[1]; 
     m_stride[2]    = framedata.nvBuffParams.pitch[2];
 
+    int size       = m_offset[1] + (m_offset[2]-m_offset[1])*2;
 
-    int size              = imageWidth * imageHeight * 1.5;
-    m_pgstBuffer          = gst_buffer_new_wrapped_full( (GstMemoryFlags)0, (gpointer)(framedata.dataY), size, 0, size, NULL, NULL );
+
+
+#ifdef R281_MEMMAP
+    NvBufferMemSyncForCpu(framedata.nvBuffParams.dmabuf_fd,0,framedata.ydata);
+    NvBufferMemSyncForCpu(framedata.nvBuffParams.dmabuf_fd,1,framedata.udata);
+    NvBufferMemSyncForCpu(framedata.nvBuffParams.dmabuf_fd,2,framedata.vdata);
+
+    NvBufferMemSyncForDevice(framedata.nvBuffParams.dmabuf_fd,0,framedata.ydata);
+    NvBufferMemSyncForDevice(framedata.nvBuffParams.dmabuf_fd,1,framedata.udata);
+    NvBufferMemSyncForDevice(framedata.nvBuffParams.dmabuf_fd,2,framedata.vdata);
+
+    m_pgstBuffer          = gst_buffer_new_wrapped_full( (GstMemoryFlags)0, *(framedata.ydata), size, 0, size, NULL, NULL );
+#else
+    m_pgstBuffer          = gst_buffer_new_wrapped_full( (GstMemoryFlags)0, (framedata.dataY), size, 0, size, NULL, NULL );
+#endif
     m_pgstVideoMeta       = gst_buffer_add_video_meta_full(m_pgstBuffer,GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_FORMAT_I420, imageWidth,imageHeight, 3, m_offset, m_stride );
 
     //ref buffer to give copy to appsrc
     gst_buffer_ref(m_pgstBuffer);
-
     //GST_BUFFER_DTS(m_pgstBuffer) = 0;
     GST_BUFFER_PTS(m_pgstBuffer) = timestamp;
 
