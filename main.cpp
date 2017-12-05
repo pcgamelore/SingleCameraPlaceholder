@@ -155,8 +155,8 @@ public:
         // Create caps filter to describe EGLStream image format.
         GstCaps *caps = gst_caps_new_simple("video/x-raw",
                                             "format", G_TYPE_STRING, "I420",
-                                            "width", G_TYPE_INT, resolution.width(),
-                                            "height", G_TYPE_INT, resolution.height(),
+                                            "width", G_TYPE_INT, RESOLUTIONW,
+                                            "height", G_TYPE_INT, RESOLUTIONH,
                                             "framerate", GST_TYPE_FRACTION, framerate, 1,
                                             NULL);
         if (!caps)

@@ -117,13 +117,13 @@ static void start_feed (GstElement * pipeline, guint size, void *ptr)
 
 
 #ifdef R281_MEMMAP
-    NvBufferMemSyncForCpu(framedata.nvBuffParams.dmabuf_fd,0,framedata.ydata);
-    NvBufferMemSyncForCpu(framedata.nvBuffParams.dmabuf_fd,1,framedata.udata);
-    NvBufferMemSyncForCpu(framedata.nvBuffParams.dmabuf_fd,2,framedata.vdata);
+    //NvBufferMemSyncForCpu(framedata.nvBuffParams.dmabuf_fd,0,framedata.ydata);
+    //NvBufferMemSyncForCpu(framedata.nvBuffParams.dmabuf_fd,1,framedata.udata);
+    //NvBufferMemSyncForCpu(framedata.nvBuffParams.dmabuf_fd,2,framedata.vdata);
 
-    NvBufferMemSyncForDevice(framedata.nvBuffParams.dmabuf_fd,0,framedata.ydata);
-    NvBufferMemSyncForDevice(framedata.nvBuffParams.dmabuf_fd,1,framedata.udata);
-    NvBufferMemSyncForDevice(framedata.nvBuffParams.dmabuf_fd,2,framedata.vdata);
+    NvBufferMemSyncForDevice(framedata.nvBuffParams.dmabuf_fd,Y_INDEX,&(framedata.ydata));
+    NvBufferMemSyncForDevice(framedata.nvBuffParams.dmabuf_fd,U_INDEX,&(framedata.udata));
+    NvBufferMemSyncForDevice(framedata.nvBuffParams.dmabuf_fd,V_INDEX,&(framedata.vdata));
 
     m_pgstBuffer          = gst_buffer_new_wrapped_full( (GstMemoryFlags)0, *(framedata.ydata), size, 0, size, NULL, NULL );
 #else

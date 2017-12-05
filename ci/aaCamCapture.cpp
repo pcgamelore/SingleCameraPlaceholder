@@ -160,10 +160,14 @@ bool aaCamCaptureThread::threadExecute()
         void **m_datamemV;
 
         //FIXME : These calls do not seem proper. Segfault at the very first call here.
-        NvBufferMemMap(fd,0,NvBufferMem_Read_Write,m_datamemY);
-        NvBufferMemMap(fd,1,NvBufferMem_Read_Write,m_datamemU);
-        NvBufferMemMap(fd,2,NvBufferMem_Read_Write,m_datamemV);
+        NvBufferMemMap(fd,Y_INDEX,NvBufferMem_Read_Write,m_datamemY);
+        NvBufferMemMap(fd,U_INDEX,NvBufferMem_Read_Write,m_datamemU);
+        NvBufferMemMap(fd,V_INDEX,NvBufferMem_Read_Write,m_datamemV);
 
+
+        NvBufferMemSyncForCpu(fd, Y_INDEX, &m_datamemY);
+        NvBufferMemSyncForCpu(fd, U_INDEX, &m_datamemU);
+        NvBufferMemSyncForCpu(fd, V_INDEX, &m_datamemV);
         framedata.ydata = m_datamemY;
         framedata.udata = m_datamemU;
         framedata.vdata = m_datamemV;

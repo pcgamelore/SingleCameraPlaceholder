@@ -16,7 +16,7 @@ set(TEGRA_MULTIMEDIA_API_DIR /home/nvidia)
 set (CMAKE_CXX_FLAGS "-DENABLETX2=1")
 ENDIF()
 
-set(TEGRA_MULTIMEDIA_API_DIR /home/nvidia)
+#set(TEGRA_MULTIMEDIA_API_DIR /home/nvidia)
 
 
 set(CMAKE_MODULE_PATH "/usr/lib/aarch64-linux-gnu/"  "/home/ubuntu/Downloads/argus/cmake" "/home/nvidia/tegra_multimedia_api/argus/cmake"  "~/Downloads" "${CMAKE_MODULE_PATH}")

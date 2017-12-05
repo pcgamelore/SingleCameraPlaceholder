@@ -52,9 +52,9 @@ struct frameBuffer
 	char *dataU;
 	char *dataV;
        
-        void **ydata;
-        void **udata;
-        void **vdata;
+        void *ydata;
+        void *udata;
+        void *vdata;
 
     NvBufferParams nvBuffParams;
 
@@ -62,8 +62,12 @@ struct frameBuffer
 
 #ifdef ENABLETX2
 #define ARGUSSIZE Argus::Size2D<uint32_t>
+#define RESOLUTIONW resolution.width()
+#define RESOLUTIONH resolution.height()
 #elif ENABLETX1
-#define ARGUSSIZE Argus::Size2D
+#define ARGUSSIZE Argus::Size
+#define RESOLUTIONW resolution.width
+#define RESOLUTIONH resolution.height
 #endif
 
 //#define R281_MEMMAP 1
