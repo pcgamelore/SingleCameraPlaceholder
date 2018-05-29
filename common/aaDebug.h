@@ -81,6 +81,8 @@ public :
   Queue<frameBuffer  > encoder2OcvConsumerFrameBuffer;
   Queue<cv::Mat  >     ocvConsumer2EncoderQ;
 
+  Queue<aaEglFrameBuffer > ocvConsumer2EncoderFB1;
+
 };
 
 

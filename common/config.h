@@ -46,17 +46,22 @@ using namespace cv;
 #define PITCH_SIZE_Y 1024
 
 
-struct frameBuffer
+struct aaEglFrameBuffer
 {
-	char *dataY;
-	char *dataU;
-	char *dataV;
-       
-        void *ydata;
-        void *udata;
-        void *vdata;
+	char           *dataY;
+	char           *dataU;
+	char           *dataV;
 
-    NvBufferParams nvBuffParams;
+	int				fsizeY;
+	int				fsizeU;
+	int				fsizeV;
+
+    CUeglFrame     eglFrame;
+    CUgraphicsResource pResource;
+
+	int framefd;
+
+    NvBufferParams nvBufParams;
 
 };
 
@@ -72,5 +77,14 @@ struct frameBuffer
 
 //#define R281_MEMMAP 1
 
+#define frameBuffer aaEglFrameBuffer
+#define DELETE_BUFFER_THRESHOLD 4
 
+
+namespace ArgusSamples
+{
+        extern EGLDisplayHolder g_display;
+}
+
+extern std::vector<aaEglFrameBuffer> eglFrameBufferList;
 #endif

@@ -8,6 +8,7 @@
 #include "GLContext.h"
 #include <NvEglRenderer.h>
 #include "../common/Queue.h"
+#include "../common/aaCircularBuffer.h"
 #include "../common/config.h"
 
 namespace ArgusSamples
@@ -31,8 +32,8 @@ public:
     {
     }
 
-    explicit aaCamCaptureThread(OutputStream *stream,  NvEglRenderer *renderer, int id , Queue<frameBuffer> *q, Queue<int> * fdq, Queue<int> *msgq, int lastFrame)
-        : m_stream(stream),  m_renderer(renderer), m_id(id) , m_pinputFrameQ(q), m_pinputFrameFdQ(fdq), m_pcamCapture2NewOCVConsumerMsgQ(msgq), m_lastFrameCount(lastFrame)
+    explicit aaCamCaptureThread(OutputStream *stream,  NvEglRenderer *renderer, int id , Queue<frameBuffer> *q, Queue<int> *msgq, aaCircularBuffer<aaEglFrameBuffer> *cbq, int lastFrame)
+        : m_stream(stream),  m_renderer(renderer), m_id(id) , m_pinputFrameQ(q), m_pcamCapture2NewOCVConsumerMsgQ(msgq), m_pinputFrameCB(cbq), m_lastFrameCount(lastFrame)
     {
 	m_currentFrame = 0;
     }
@@ -64,7 +65,8 @@ private:
     int m_id;
 
     Queue<frameBuffer>         *m_pinputFrameQ;
-    Queue<int   >              *m_pinputFrameFdQ;
+    aaCircularBuffer<aaEglFrameBuffer>           *m_pinputFrameCB;
+
     Queue<int   >              *m_pcamCapture2NewOCVConsumerMsgQ;
     int                         m_lastFrameCount;
     int                         m_currentFrame;	

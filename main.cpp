@@ -25,7 +25,7 @@
 #include <inttypes.h>
 #include "../common/Queue.h"
 #include "../common/aaDebug.h"
-
+#include "../common/aaCircularBuffer.h"
 
 #include <sys/stat.h>
 
@@ -35,10 +35,12 @@ using namespace Argus;
 using namespace ArgusSamples;
 
 
-static uint32_t CAPTURE_TIME                        = 3; // In seconds.
+static uint32_t CAPTURE_TIME                        = 4; // In seconds.
 static const uint32_t NUMBER_SESSIONS               = 2;
 static const int    DEFAULT_FPS                     = 30;
 static const int lastFrameCount                     = CAPTURE_TIME * DEFAULT_FPS;
+
+std::vector<aaEglFrameBuffer> eglFrameBufferList;
 
 
 namespace ArgusSamples
@@ -56,6 +58,8 @@ static const uint32_t    LENGTH                     = 10; // in seconds.
 
 // Globals.
 EGLDisplayHolder g_display;
+
+
 
 /**
  * Class to initialize and control GStreamer video encoding from an EGLStream.
@@ -267,6 +271,42 @@ protected:
     GstElement *m_videoEncoder;
 };
 
+static int sigint_received = 0;
+
+/* Signal handler for ctrl+c */
+static void intHandler(int dummy) {
+
+   /*Enable all termination variables here */
+   cout << "Initiating termination\n";
+   sigint_received = 1;
+
+}
+
+static sigset_t signal_mask; /* signals to block         */
+
+static void *signal_thread(void *arg) {
+   int sig_caught; /* signal caught       */
+   int rc;         /* returned code       */
+
+   rc = sigwait(&signal_mask, &sig_caught);
+   if (rc != 0) {
+      /* handle error */
+   }
+   switch (sig_caught) {
+   case SIGINT: /* process SIGINT  */
+      cout << "Initiating termination from SIGINT\n";
+      break;
+   case SIGTERM: /* process SIGTERM */
+      cout << "Initiating termination from SIGTERM\n";
+      break;
+   default: /* should normally not happen */
+      fprintf(stderr, "\nUnexpected signal %d\n", sig_caught);
+      break;
+   }
+}
+
+
+
 
 bool  execute()
 {
@@ -276,6 +316,10 @@ bool  execute()
     // Initialize the preview window and EGL display.    
     Window &window = Window::getInstance(); 
     PROPAGATE_ERROR(g_display.initialize(window.getEGLNativeDisplay()));
+
+    // cntrl c
+    signal(SIGINT, intHandler);
+
 
     // Initialize the Argus camera provider.
     UniqueObj<CameraProvider> cameraProvider(CameraProvider::create());
@@ -357,10 +401,12 @@ bool  execute()
     NvEglRenderer *rendererCamera0 = NULL;
     rendererCamera0 = NvEglRenderer::createEglRenderer("renderer0", 720 , 578  , 0, 0);	 	
     Queue<frameBuffer> inputFrameQ;
-    Queue<int   > inputFrameFdQ;
+
     Queue<int   > camCapture2NewOCVConsumerMsgQ;
-    aaCamCaptureThread aaCamCaptureLeft(streamLeft.get(), rendererCamera0,0,&inputFrameQ,&inputFrameFdQ,&camCapture2NewOCVConsumerMsgQ,lastFrameCount);
-    aaNewOCVConsumerThread aaNewConsumerLeft(streamLeft.get(), rendererCamera0,0,&inputFrameQ,&inputFrameFdQ,&camCapture2NewOCVConsumerMsgQ);
+    aaCircularBuffer<aaEglFrameBuffer>   inputFrameCB(64);
+
+    aaCamCaptureThread aaCamCaptureLeft(streamLeft.get(), rendererCamera0,0,&inputFrameQ,&camCapture2NewOCVConsumerMsgQ,&inputFrameCB,lastFrameCount);
+    aaNewOCVConsumerThread aaNewConsumerLeft(streamLeft.get(), rendererCamera0,0,&inputFrameQ,&inputFrameCB,&camCapture2NewOCVConsumerMsgQ);
 
 
     PROPAGATE_ERROR(aaCamCaptureLeft.initialize());
@@ -442,8 +488,18 @@ bool  execute()
 
 }; // namespace ends here
 
+
+
 int main(int argc, char** argv )
 {
+
+ //  signal(SIGINT, intHandler);
+
+//   while (sigint_received == 0) {
+//   };
+
+
+
    if (!ArgusSamples::execute())
       return EXIT_FAILURE;
 	

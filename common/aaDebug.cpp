@@ -87,7 +87,8 @@ static void start_feed (GstElement * pipeline, guint size, void *ptr)
     GstVideoMeta *m_pgstVideoMeta;
 //  cv::Mat img = ((aaDebug *)ptr)->ocvConsumer2EncoderQ.pop();
 //  cv::Mat img = ((aaDebug *)ptr)->ocvConsumer2EncoderQ.pop();
-    frameBuffer framedata = ((aaDebug *)ptr)->ocvConsumer2EncoderFrameBuffer.pop();
+//    frameBuffer framedata = ((aaDebug *)ptr)->ocvConsumer2EncoderFrameBuffer.pop();
+    aaEglFrameBuffer framedata = ((aaDebug *)ptr)->ocvConsumer2EncoderFB1.pop();
 
 #if 0
     FILE *fp ;
@@ -105,12 +106,12 @@ static void start_feed (GstElement * pipeline, guint size, void *ptr)
     gint           m_stride[3];
 
 
-    m_offset[0]    = framedata.nvBuffParams.offset[0];
-    m_offset[1]    = framedata.nvBuffParams.offset[1];
-    m_offset[2]    = framedata.nvBuffParams.offset[2];
-    m_stride[0]    = framedata.nvBuffParams.pitch[0]; 
-    m_stride[1]    = framedata.nvBuffParams.pitch[1]; 
-    m_stride[2]    = framedata.nvBuffParams.pitch[2];
+    m_offset[0]    = framedata.nvBufParams.offset[0];
+    m_offset[1]    = framedata.nvBufParams.offset[1];
+    m_offset[2]    = framedata.nvBufParams.offset[2];
+    m_stride[0]    = framedata.nvBufParams.pitch[0]; 
+    m_stride[1]    = framedata.nvBufParams.pitch[1]; 
+    m_stride[2]    = framedata.nvBufParams.pitch[2];
 
     int size       = m_offset[1] + (m_offset[2]-m_offset[1])*2;
 
@@ -121,9 +122,9 @@ static void start_feed (GstElement * pipeline, guint size, void *ptr)
     //NvBufferMemSyncForCpu(framedata.nvBuffParams.dmabuf_fd,1,framedata.udata);
     //NvBufferMemSyncForCpu(framedata.nvBuffParams.dmabuf_fd,2,framedata.vdata);
 
-    NvBufferMemSyncForDevice(framedata.nvBuffParams.dmabuf_fd,Y_INDEX,&(framedata.ydata));
-    NvBufferMemSyncForDevice(framedata.nvBuffParams.dmabuf_fd,U_INDEX,&(framedata.udata));
-    NvBufferMemSyncForDevice(framedata.nvBuffParams.dmabuf_fd,V_INDEX,&(framedata.vdata));
+    NvBufferMemSyncForDevice(framedata.nvBufParams.dmabuf_fd,Y_INDEX,&(framedata.ydata));
+    NvBufferMemSyncForDevice(framedata.nvBufParams.dmabuf_fd,U_INDEX,&(framedata.udata));
+    NvBufferMemSyncForDevice(framedata.nvBufParams.dmabuf_fd,V_INDEX,&(framedata.vdata));
 
     m_pgstBuffer          = gst_buffer_new_wrapped_full( (GstMemoryFlags)0, *(framedata.ydata), size, 0, size, NULL, NULL );
 #else
@@ -231,8 +232,47 @@ aaDebug::aaDebug()
 aaDebug::~aaDebug()
 {
   GstStateChangeReturn state_ret;
-state_ret = gst_element_set_state((GstElement*)m_ppipeline, GST_STATE_NULL);
- g_warning("set state null returned %d\n", state_ret);
+
+gst_debug_set_default_threshold(GST_LEVEL_LOG);
+//cout << "Destroying aaDebug 0\n";
+
+//GstFlowReturn eos_result = gst_app_src_end_of_stream( m_pappsrc );
+
+      // Send the end-of-stream event.
+      GstPad *pad = gst_element_get_static_pad(m_pencoder, "sink");
+      if (!pad){
+            g_warning("Failed to get encoder sink\n");
+        } 
+      bool result = gst_pad_send_event(pad, gst_event_new_eos());
+      gst_object_unref(pad);
+      if (!result){
+            g_warning("Failed to send EOS to encoder\n");
+        } 
+
+cout << "Destroying aaDebug 1\n";
+        // Wait for the event to complete.
+        GstBus *bus = gst_pipeline_get_bus(GST_PIPELINE(m_ppipeline));
+        if (!bus) {
+            g_warning("Failed to get bus\n");
+        } 
+         result = gst_bus_poll(bus, GST_MESSAGE_EOS, GST_CLOCK_TIME_NONE);
+cout << "Destroying aaDebug 2\n";
+        gst_object_unref(bus);
+        if (!result) {
+            g_warning("Failed to send EOS\n");
+        }
+
+cout << "Destroying aaDebug 3\n";
+
+        // Stop the pipeline.
+        if (gst_element_set_state(m_ppipeline, GST_STATE_NULL) == GST_STATE_CHANGE_FAILURE){
+            g_warning("Failed to stop pipeline\n");
+        }
+
+
+cout << "Destroying aaDebug 4\n";
+//state_ret = gst_element_set_state((GstElement*)m_ppipeline, GST_STATE_NULL);
+// g_warning("set state null returned %d\n", state_ret);
 
 
     gst_object_unref(GST_OBJECT(m_ppipeline));

@@ -41,7 +41,7 @@ extern pthread_cond_t queue_condGlobal;
 namespace ArgusSamples
 {
 
-#if 0
+#if 1
 #define AACAM_CAPTURE_PRINT(...);    printf("Cam Capture CONSUMER: " __VA_ARGS__);
 #else
 #define AACAM_CAPTURE_PRINT(...);      
@@ -111,6 +111,9 @@ bool aaCamCaptureThread::threadExecute()
         AACAM_CAPTURE_PRINT("1 Starting frame caputre  %d \n",m_currentFrame);
         UniqueObj<Frame> frame(iFrameConsumer->acquireFrame());
         IFrame *iFrame = interface_cast<IFrame>(frame);
+
+        AACAM_CAPTURE_PRINT("2 Done acquiring frame  %d \n",m_currentFrame);
+
         if (!iFrame)
             break;
         // Get the Frame's Image.
@@ -130,12 +133,16 @@ bool aaCamCaptureThread::threadExecute()
 
         NvBufferParams params;
         NvBufferGetParams(fd, &params);
-	frameBuffer framedata;
-        framedata.nvBuffParams = params;
+	aaEglFrameBuffer framedata;
+
+        framedata.framefd           = fd;
+        framedata.nvBufParams = params;
 
         int fsize = params.pitch[0] * params.height[0] ;
 	int fsizeU = params.pitch[1] * params.height[1] ;
 	int fsizeV = params.pitch[2] * params.height[2];
+
+        AACAM_CAPTURE_PRINT("3 Done acquiring frame  %d \n",m_currentFrame);
    
  	struct timeval tp;
     	gettimeofday(&tp, NULL);
@@ -152,7 +159,12 @@ bool aaCamCaptureThread::threadExecute()
 
         framedata.dataY = m_datamem;
         framedata.dataU = m_datamemU;
-        framedata.dataV = m_datamemV;   
+        framedata.dataV = m_datamemV;  
+
+        framedata.fsizeY = framedata.nvBufParams.offset[1] + (framedata.nvBufParams.offset[2]-framedata.nvBufParams.offset[1])*2;
+	framedata.fsizeU = framedata.nvBufParams.pitch[1] * framedata.nvBufParams.height[1] ;
+	framedata.fsizeV = framedata.nvBufParams.pitch[2] * framedata.nvBufParams.height[2];
+ 
 
 #else
         void **m_datamemY;
@@ -175,14 +187,14 @@ bool aaCamCaptureThread::threadExecute()
 	
 	
 
+        AACAM_CAPTURE_PRINT("3 pushing frame in Q  %d \n",m_currentFrame);
 
 
         // Push input buffer into q for OCV Consumer 
-        m_pinputFrameQ->push(framedata);
-        m_pinputFrameFdQ->push(fd);
+        m_pinputFrameCB->push(framedata);
 
-        AACAM_CAPTURE_PRINT("Pushed frame no %d  Queue Size: %d Camera ID : %d\n",m_currentFrame,m_pinputFrameQ->getsize() ,m_pCamInfo->camId);
-	    m_currentFrame++;
+        AACAM_CAPTURE_PRINT("Pushed frame no %d  Queue Size: %d \n",m_currentFrame,m_pinputFrameQ->getsize() );
+        m_currentFrame++;
     }
 
 
@@ -195,7 +207,6 @@ bool aaCamCaptureThread::threadExecute()
 
 
     m_pinputFrameQ->push(endBuffer);
-    m_pinputFrameFdQ->push(0);
     m_pcamCapture2NewOCVConsumerMsgQ->push(10);
 
     PROPAGATE_ERROR(requestShutdown());

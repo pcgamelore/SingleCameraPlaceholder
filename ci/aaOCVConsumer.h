@@ -10,7 +10,7 @@
 #include "../common/config.h"
 #include "../common/Queue.h"
 #include "../common/aaDebug.h"
-
+#include "../common/aaCircularBuffer.h"
 
 
 namespace ArgusSamples
@@ -35,8 +35,8 @@ public:
     {
     }
 
-  aaNewOCVConsumerThread(OutputStream *stream,  NvEglRenderer *renderer, int id, Queue<frameBuffer> *q,Queue<int> * fdq, Queue<int> *msgq)
-        : m_stream(stream),  m_renderer(renderer), m_id(id) , m_pinputFrameQ(q), m_pinputFrameFdQ(fdq),m_pcamCapture2NewOCVConsumerMsgQ(msgq)
+  aaNewOCVConsumerThread(OutputStream *stream,  NvEglRenderer *renderer, int id, Queue<frameBuffer> *q, aaCircularBuffer<aaEglFrameBuffer> *cbq, Queue<int> *msgq)
+        : m_stream(stream),  m_renderer(renderer), m_id(id) , m_pinputFrameQ(q),  m_pinputFrameCB(cbq), m_pcamCapture2NewOCVConsumerMsgQ(msgq)
     {
     }
 
@@ -62,9 +62,11 @@ private:
     int m_id;
 
 
-    Queue<frameBuffer> *m_pinputFrameQ;
-    Queue<int   > *m_pinputFrameFdQ;
+    Queue<aaEglFrameBuffer> *m_pinputFrameQ;
+    Queue<aaEglFrameBuffer> m_pinputFrameDelQ;
+
     Queue<int   > *m_pcamCapture2NewOCVConsumerMsgQ;
+    aaCircularBuffer<aaEglFrameBuffer>  *m_pinputFrameCB;
 
     aaDebug       *m_pDebugObj;
 

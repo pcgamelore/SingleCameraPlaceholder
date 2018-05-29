@@ -30,7 +30,7 @@ find_package(OpenGLES   REQUIRED)
 find_package(X11        REQUIRED)
 find_package(EGL        REQUIRED)
 find_package(OpenCV     REQUIRED )
-find_package(OpenVX     REQUIRED )
+
 
 find_library( ARGUSSAMPLEUTILS libargussampleutils.a HINTS "/home/")
 
